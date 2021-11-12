@@ -59,11 +59,95 @@
             </div>
         </div>
     </nav>
-
+    <div class="container">
+        <h1>User Profile </h1>
+        <form>
+            <fieldset class="mb-3" id="personalInfoFields" disabled>
+                <div class="form-group">
+                    <label >Name</label>
+                    <input type="text" id="nameInput" class="form-control" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label >School</label>
+                    <input type="text" id="schoolInput" class="form-control" placeholder="Enter your school">
+                </div>
+                <div class="form-group">
+                    <label >City</label>
+                    <input type="text" id="cityInput" class="form-control" placeholder="Enter your city">
+                </div>
+            </fieldset>
+            <div class="d-flex justify-content-end mt-5">
+                <button type="button" class="btn btn-secondary" onclick="editUserInfo()" >Edit</button>
+                <span style="width: 10px"></span>
+                <button type="button" class="btn btn-info" onclick="saveUserInfo()">Save</button>
+            </div>
+        </form>
+</div>
     <!--------------------------------------------------------------------->
     <!-- JS files: Your own JavaScript functions included here    -->
     <!--------------------------------------------------------------------->
     <!-- <script src="./scripts/my_script.js"></script> -->
+    <script>
+        var currentUser;
+function populateInfo() {
+            firebase.auth().onAuthStateChanged(user => {
+                // Check if user is signed in:
+                if (user) {
+
+                    //go to the correct user document by referencing to the user uid
+                    currentUser = db.collection("users").doc(user.uid)
+                    //get the document for current user.
+                    currentUser.get()
+                        .then(userDoc => {
+                            //get the data fields of the user
+                            var userName = userDoc.data().name;
+                            var userSchool = userDoc.data().school;
+                            var userCity = userDoc.data().city;
+
+                            //if the data fields are not empty, then write them in to the form.
+                            if (userName != null) {
+                                document.getElementById("nameInput").value = userName;
+                            }
+                            if (userSchool != null) {
+                                document.getElementById("schoolInput").value = userSchool;
+                            }
+                            if (userCity != null) {
+                                document.getElementById("cityInput").value = userCity;
+                            }
+                        })
+                } else {
+                    // No user is signed in.
+                    console.log ("No user is signed in");
+                }
+            });
+        }
+
+//call the function to run it 
+populateInfo();
+
+
+function editUserInfo() {
+   //Enable the form fields
+   document.getElementById('personalInfoFields').disabled = false;
+}
+
+function saveUserInfo() {
+    userName = document.getElementById('nameInput').value;
+    userSchool = document.getElementById('schoolInput').value;
+    userCity = document.getElementById('cityInput').value;
+
+    currentUser.update({
+                    name: userName,
+                    school: userSchool,
+                    city: userCity
+                })
+                .then(() => {
+                    console.log("Document successfully updated!");
+                })
+
+    document.getElementById('personalInfoFields').disabled = true;
+}
+    </script>
 
 </body>
 

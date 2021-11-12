@@ -185,7 +185,6 @@
             });
         }
 
-
         function displayHikes() {
             db.collection("Hikes").get()
                 .then(allHikes => {
@@ -196,6 +195,11 @@
                     })
 
                 })
+        }
+
+
+        function setHikeData(id) {
+            localStorage.setItem('hikeID', id)
         }
         //displayHikes();
     </script>
