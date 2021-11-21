@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>My BCIT Project</title>
+    <meta name="comp1800 template" content="my bcit Hiking App project">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <!-- Optional styles and scripts of your own -->
+    <link type="text/css" href="styles/my_style.css">
+
+    <!-- Bootstrap FirebaseUI CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <!-- Firebase 8 CDNs-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/ui/4.8.1/firebase-ui-auth.js"></script>
+
+    <!-- Link to the api keys for your firebase project -->
+    <script src="/scripts/firebaseAPI_TEAM99.js"></script>
+
+</head>
+
+<body>
+    <template id="CardTemplate">
+        <div class="card py-2 mx-2" style="width: 18rem;">
+            <img class="card-image" src=" ..." class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">Card title</h5>
+                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the
+                    card's content.</p>
+                <a class="card-href" href="#" class="btn btn-primary">Get Details</a>
+            </div>
+        </div>
+    </template>
+    <div class="container">
+        <h1>Your Hike gallery</h1>
+        <!-- Here is container for cards  -->
+        <div class="container">
+            <div id="hikes-go-here" class="row row-cols-auto">
+
+            </div>
+        </div>
+</div>
+
+<div class="container">
+    <h1>Your Hero gallery</h1>
+    <!-- Here is container for cards  -->
+    <div class="container">
+        <div id="heros-go-here" class="row row-cols-auto">
+
+        </div>
+    </div>
+</div>
+<div class="container">
+    <h1>Your countries gallery</h1>
+    <!-- Here is container for cards  -->
+    <div class="container">
+        <div id="countries-go-here" class="row row-cols-auto">
+
+        </div>
+    </div>
+</div>
+    
+    <script>
+        function writeHikeData() {
+    max = 21;
+    //define a variable for the collection you want to create in Firestore to populate data
+    var hikesRef = db.collection("hikes");
+    for (i = 1; i <= max; i++) {
+        hikesRef.add({ //add to database, autogen ID
+            code: "id" + i,
+            name: "hike" + i,
+            details: "Yoshi says this hike is amazing!  You will love going on the hike called hike#" + i
+        })
+   }
+}
+// writeHikeData();
+
+async function getCSVData() {
+    // catching response after waiting for the fetch method to be done.
+    const response = await fetch('./olympic-medals.csv');
+    // catching data waiting until the response is received.
+    const data = await response.text();
+    // separate the text at every new line pattern
+    // what does the slice method do again?
+    const list = data.split('\n').slice(1);
+
+    list.forEach(row => {
+        let columns = row.split(',');
+        let country = columns[0];
+        let gold = columns[1];
+        let silver = columns[2];
+        let bronze = columns[3];
+
+        let details = "Yoshi is super proud ";
+        details += country + ": " + gold + "gold;"+silver+"silver"+bronze+"bronze.";
+        // return a boolean if a string contains a certain letter or pattern
+        if (country.includes("B")) {
+            console.log(country);
+            db.collection('countries').add({
+                name:country,
+                details
+            })
+        }
+    })
+}
+
+// getCSVData();
+
+
+
+// async function readCityData() {
+//     const response = await fetch();
+
+//     const data = await response.text();
+
+//     const json = JSON.parse(data);
+
+//     db.collection("stuff").add({
+//         name: name,
+//         details: details
+//     });
+
+// }
+
+async function readJSONhero() {
+        const response = await fetch('https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/all.json');
+
+        const data = await response.text();
+        const superHeroes = JSON.parse(data);
+
+        for (x of superHeroes) {
+            let name = x.name;
+            let details = "Yoshi is impressed! " + name + " occupation: ";
+            for (w in x.work) {
+                details += " " + x.work.occupation;
+            }
+            if(name.includes("Z")){
+                   console.log(name);
+                   db.collection("heros").add({
+                      name: x.name,
+                      details: details
+                   })
+                }
+        }
+    }
+
+    // readJSONhero();
+
+    function displayCards(collection) {
+            let CardTemplate = document.getElementById("CardTemplate");
+
+            db.collection(collection).get()
+                .then(snap => {
+                    var i = 1;
+                    snap.forEach(doc => {    //iterate thru each doc
+                        var title = doc.data().name;
+                        var details = doc.data().details;
+                        let newCard = CardTemplate.content.cloneNode(true);
+
+                        //update title and text and image
+                        newCard.querySelector('.card-title').innerHTML = title;
+                        newCard.querySelector('.card-text').innerHTML = details;
+                        newCard.querySelector('.card-image').src = "./images/" + collection + ".jpg";  //hikes.jpg
+
+                        //give unique ids to all elements for future use
+                        newCard.querySelector('.card-title').setAttribute("id", "ctitle" + i);
+                        newCard.querySelector('.card-text').setAttribute("id", "ctext" + i);
+                        newCard.querySelector('.card-image').setAttribute("id", "cimage" + i);
+
+                        //attach to gallery
+                        document.getElementById(collection + "-go-here").appendChild(newCard);
+                    })
+                })
+        }
+
+        displayCards("hikes");
+        displayCards("heros");
+        displayCards("countries");
+    </script>
+
+</body>
+
+</html>
